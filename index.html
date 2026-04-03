@@ -201,6 +201,26 @@ async function init() {
         div.appendChild(wrap);
         dq.appendChild(div);
         return;
+      } else if (q.tipe==='file') {
+        input = document.createElement('input');
+        input.className = 'fi';
+        input.type = 'file';
+        input.accept = '.pdf,.doc,.docx';
+        input.style.padding = '8px';
+      } else if (q.tipe==='foto') {
+        var wrap2 = document.createElement('div');
+        wrap2.dataset.qid = q.id;
+        wrap2.dataset.wajib = q.wajib ? '1' : '0';
+        wrap2.dataset.tipe = 'foto';
+        wrap2.innerHTML = '<label style="display:block;cursor:pointer;background:var(--bg2);border:1.5px dashed var(--brd2);border-radius:var(--radius);padding:16px;text-align:center">' +
+          '<input type="file" accept="image/*" style="display:none" onchange="previewFoto(this,\'foto-prev-'+q.id+'\')">' +
+          '<div style="font-size:24px;margin-bottom:4px">📷</div>' +
+          '<div style="font-size:12px;color:var(--txt2)">Tap untuk pilih foto</div>' +
+          '<img id="foto-prev-'+q.id+'" style="max-width:100%;border-radius:8px;margin-top:8px;display:none">' +
+        '</label>';
+        div.appendChild(wrap2);
+        dq.appendChild(div);
+        return;
       } else {
         input = document.createElement('input');
         input.className = 'fi';
@@ -313,6 +333,20 @@ function salinKode() {
   navigator.clipboard.writeText(kode).catch(function(){});
   g('success-view').querySelector('.cek-btn').textContent='✅ Disalin!';
   setTimeout(function(){ g('success-view').querySelector('.cek-btn').textContent='📋 Salin Kode'; },2000);
+}
+
+function previewFoto(input, previewId) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = g(previewId);
+    if (img) { img.src = e.target.result; img.style.display='block'; }
+    // Store base64 on the wrap element
+    var wrap = input.closest('[data-tipe="foto"]');
+    if (wrap) wrap.dataset.value = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function showErr(id,msg){ var el=g(id); if(el){el.textContent=msg;el.style.display='block';} }
