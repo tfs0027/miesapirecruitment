@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Formulir Lamaran</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FFFBF5;--bg2:#fff;--dark:#1A120A;--txt:#2D1B0E;--txt2:#8B7355;--txt3:#C4A882;
+  --accent:#E8581E;--accent2:#FF7A3D;--brd:#E8D5BC;--brd2:#D4B896;
+  --green:#00B894;--green-bg:#D1FAE5;--green-dk:#065F46;
+  --red:#EF4444;--red-bg:#FEE2E2;--red-dk:#991B1B;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08);
+  --font-mono:'Courier New',monospace;
+}
+body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.container{max-width:560px;margin:0 auto;padding:20px 16px 60px}
+.header{text-align:center;padding:28px 0 20px}
+.header-logo{font-size:48px;margin-bottom:8px}
+.header-nama{font-size:22px;font-weight:800}
+.header-judul{font-size:15px;color:var(--txt2);margin-top:4px}
+.desc-box{background:var(--bg2);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--txt2);line-height:1.7;border:1px solid var(--brd)}
+.card{background:var(--bg2);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px;border:1px solid var(--brd)}
+.form-group{margin-bottom:14px}
+.form-lbl{display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px}
+.form-lbl.wajib::after{content:" *";color:var(--red)}
+.fi{width:100%;padding:11px 14px;border:1.5px solid var(--brd);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--txt);background:var(--bg);transition:border-color .2s;outline:none}
+.fi:focus{border-color:var(--accent)}
+textarea.fi{resize:vertical;min-height:80px}
+select.fi{cursor:pointer}
+.btn-submit{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:inherit;cursor:pointer;margin-top:4px;box-shadow:0 4px 20px rgba(232,88,30,.35)}
+.btn-submit:disabled{background:#ccc;box-shadow:none;cursor:not-allowed}
+.status-check{display:none;margin-top:16px}
+.cek-btn{width:100%;padding:13px;background:transparent;border:2px solid var(--accent);color:var(--accent);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.loading{display:none;text-align:center;padding:40px;color:var(--txt2)}
+.success-card{display:none;text-align:center;padding:32px 20px;background:var(--green-bg);border-radius:16px;border:2px solid var(--green)}
+.success-icon{font-size:56px;margin-bottom:12px}
+.success-title{font-size:20px;font-weight:800;color:var(--green-dk)}
+.kode-ref{font-family:var(--font-mono);font-size:18px;font-weight:800;background:var(--bg2);padding:10px 20px;border-radius:10px;border:2px solid var(--green);margin:12px 0;color:var(--green-dk);letter-spacing:2px}
+.closed-card{text-align:center;padding:40px 20px;color:var(--txt2)}
+.err-msg{background:var(--red-bg);color:var(--red-dk);border-radius:8px;padding:8px 12px;font-size:12px;margin-top:6px;display:none}
+.tab-row{display:flex;gap:8px;margin-bottom:16px}
+.tab-btn{flex:1;padding:10px;border:2px solid var(--brd);border-radius:10px;background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--txt2)}
+.tab-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="loading" class="loading">
+    <div style="font-size:40px;margin-bottom:12px">⏳</div>
+    <div>Memuat formulir...</div>
+  </div>
+
+  <div id="closed-view" class="closed-card" style="display:none">
+    <div style="font-size:48px;margin-bottom:12px">🔒</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Penerimaan Ditutup</div>
+    <div style="font-size:13px">Saat ini kami tidak sedang membuka lowongan. Silakan cek lagi nanti.</div>
+  </div>
+
+  <div id="main-view" style="display:none">
+    <div class="header">
+      <div class="header-logo" id="hdr-logo">🍜</div>
+      <div class="header-nama" id="hdr-nama">WarungKu</div>
+      <div class="header-judul" id="hdr-judul">Bergabung Bersama Kami</div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-lamar" onclick="showTab('lamar')">📝 Daftar Lamar</button>
+      <button class="tab-btn" id="tab-cek" onclick="showTab('cek')">🔍 Cek Status</button>
+    </div>
+
+    <!-- FORM LAMAR -->
+    <div id="panel-lamar">
+      <div class="desc-box" id="hdr-desc"></div>
+
+      <div class="card">
+        <div class="form-group">
+          <label class="form-lbl wajib">Nama Lengkap</label>
+          <input class="fi" id="inp-nama" placeholder="Nama lengkap kamu" autocomplete="name">
+          <div class="err-msg" id="err-nama"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl wajib">No. HP / WhatsApp</label>
+          <input class="fi" id="inp-hp" type="tel" placeholder="08xxxxxxxxxx">
+          <div class="err-msg" id="err-hp"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-lbl">Email</label>
+          <input class="fi" id="inp-email" type="email" placeholder="email@contoh.com">
+        </div>
+        <div class="form-group">
+          <label class="form-lbl wajib">Posisi yang Dilamar</label>
+          <select class="fi" id="inp-posisi">
+            <option value="">-- Pilih posisi --</option>
+          </select>
+          <div class="err-msg" id="err-posisi"></div>
+        </div>
+        <!-- Dynamic questions injected here -->
+        <div id="dynamic-questions"></div>
+        <button class="btn-submit" id="btn-submit" onclick="submitLamaran()">📝 Kirim Lamaran</button>
+      </div>
+    </div>
+
+    <!-- CEK STATUS -->
+    <div id="panel-cek" style="display:none">
+      <div class="card">
+        <div class="form-group">
+          <label class="form-lbl">Kode Referensi Lamaran</label>
+          <input class="fi" id="inp-kode" placeholder="REF-XXXXX" style="font-family:var(--font-mono);text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <button class="cek-btn" onclick="cekStatus()">🔍 Cek Status Lamaran</button>
+        <div id="status-result" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="success-view" class="success-card" style="display:none">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Lamaran Terkirim!</div>
+    <div style="font-size:13px;color:var(--green-dk);margin:8px 0 14px" id="pesan-selesai"></div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">Kode referensi kamu:</div>
+    <div class="kode-ref" id="kode-result"></div>
+    <div style="font-size:11px;color:var(--txt2);margin-top:6px">Simpan kode ini untuk mengecek status lamaran.</div>
+    <button class="cek-btn" style="margin-top:16px" onclick="salinKode()">📋 Salin Kode</button>
+  </div>
+</div>
+
+<script>
+var SB_URL = 'https://lztdvlrunspmcoewfjcg.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGR2bHJ1bnNwbWNvZXdmamNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODA5MDIsImV4cCI6MjA5MDI1NjkwMn0.fOxpyctLY6k-QjaMIdUdRHJnsGm7FhPozhWTMBSl9-4';
+var _sb = null, _resto = null, RESTAURANT_ID = null;
+
+function g(id){ return document.getElementById(id); }
+
+async function init() {
+  g('loading').style.display = 'block';
+  var params = new URLSearchParams(location.search);
+  RESTAURANT_ID = params.get('r');
+  if (!RESTAURANT_ID) { g('loading').style.display='none'; g('closed-view').style.display='block'; return; }
+  _sb = window.supabase.createClient(SB_URL, SB_KEY);
+  try {
+    var res = await _sb.from('restaurants').select('*').eq('id', RESTAURANT_ID).single();
+    if (res.error || !res.data) throw new Error('Restoran tidak ditemukan');
+    _resto = res.data;
+    var cfg = _resto.cfg || {};
+    var rek = _resto.rekrutmen_cfg || {};
+    // Setup header
+    g('hdr-nama').textContent = _resto.nama || 'WarungKu';
+    g('hdr-logo').textContent = cfg.logo || '🍜';
+    g('hdr-judul').textContent = rek.judulLowongan || 'Bergabung Bersama Kami';
+    g('hdr-desc').textContent = rek.deskripsi || '';
+    document.title = (rek.judulLowongan||'Lamaran') + ' - ' + (_resto.nama||'');
+    // Check if open
+    if (!rek.aktif) {
+      g('loading').style.display='none';
+      g('closed-view').style.display='block';
+      return;
+    }
+    // Build posisi dropdown
+    var posEl = g('inp-posisi');
+    var posisi = (rek.posisi||[]).filter(function(pos){ return pos.aktif!==false; });
+    posisi.forEach(function(pos){
+      var opt = document.createElement('option');
+      opt.value = pos.nama;
+      opt.textContent = pos.nama + (pos.kuota>0?' (Kuota: '+pos.kuota+')':'');
+      posEl.appendChild(opt);
+    });
+    // Build dynamic questions
+    var dq = g('dynamic-questions');
+    var pertanyaan = rek.pertanyaan || [];
+    pertanyaan.forEach(function(q) {
+      var div = document.createElement('div');
+      div.className = 'form-group';
+      var lbl = document.createElement('label');
+      lbl.className = 'form-lbl' + (q.wajib?' wajib':'');
+      lbl.textContent = q.label;
+      div.appendChild(lbl);
+      var input;
+      if (q.tipe==='textarea') {
+        input = document.createElement('textarea');
+        input.className = 'fi'; input.rows = 3;
+      } else if (q.tipe==='pilihan') {
+        input = document.createElement('select');
+        input.className = 'fi';
+        input.innerHTML = '<option value="">-- Pilih --</option>' +
+          (q.opsi||[]).map(function(o){ return '<option>'+o+'</option>'; }).join('');
+      } else if (q.tipe==='radio') {
+        var wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px';
+        (q.opsi||[]).forEach(function(o) {
+          var lbl2 = document.createElement('label');
+          lbl2.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:8px 12px;border:1.5px solid var(--brd);border-radius:var(--radius)';
+          lbl2.innerHTML = '<input type="radio" name="q_'+q.id+'" value="'+o+'"> '+o;
+          wrap.appendChild(lbl2);
+        });
+        wrap.dataset.qid = q.id;
+        wrap.dataset.wajib = q.wajib ? '1' : '0';
+        div.appendChild(wrap);
+        dq.appendChild(div);
+        return;
+      } else {
+        input = document.createElement('input');
+        input.className = 'fi';
+        input.type = q.tipe==='angka' ? 'number' : 'text';
+      }
+      input.dataset.qid = q.id;
+      input.dataset.wajib = q.wajib ? '1' : '0';
+      div.appendChild(input);
+      dq.appendChild(div);
+    });
+    g('loading').style.display='none';
+    g('main-view').style.display='block';
+  } catch(e) {
+    g('loading').innerHTML = '<div style="color:red;text-align:center;padding:40px">Gagal: '+e.message+'</div>';
+  }
+}
+
+function showTab(tab) {
+  g('tab-lamar').classList.toggle('active', tab==='lamar');
+  g('tab-cek').classList.toggle('active', tab==='cek');
+  g('panel-lamar').style.display = tab==='lamar' ? 'block' : 'none';
+  g('panel-cek').style.display = tab==='cek' ? 'block' : 'none';
+}
+
+async function submitLamaran() {
+  var nama = g('inp-nama').value.trim();
+  var hp = g('inp-hp').value.trim();
+  var email = g('inp-email').value.trim();
+  var posisi = g('inp-posisi').value;
+  // Validate
+  var ok = true;
+  if (!nama) { showErr('err-nama','Nama wajib diisi'); ok=false; } else hideErr('err-nama');
+  if (!hp) { showErr('err-hp','No. HP wajib diisi'); ok=false; } else hideErr('err-hp');
+  if (!posisi) { showErr('err-posisi','Pilih posisi terlebih dahulu'); ok=false; } else hideErr('err-posisi');
+  // Validate required questions
+  var rek = (_resto.rekrutmen_cfg)||{};
+  var jawaban = {};
+  var qEls = document.querySelectorAll('[data-qid]');
+  qEls.forEach(function(el) {
+    var qid = el.dataset.qid;
+    var wajib = el.dataset.wajib==='1';
+    var val = '';
+    if (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT') {
+      val = el.value.trim();
+    } else {
+      // radio group
+      var checked = el.querySelector('input[type="radio"]:checked');
+      val = checked ? checked.value : '';
+    }
+    jawaban[qid] = val;
+    if (wajib && !val) ok = false;
+  });
+  if (!ok) { return; }
+
+  var btn = g('btn-submit'); btn.disabled=true; btn.textContent='⏳ Mengirim...';
+  try {
+    var kode = 'REF-'+Math.random().toString(36).substr(2,5).toUpperCase();
+    var res = await _sb.from('applicants').insert({
+      restaurant_id: RESTAURANT_ID,
+      kode: kode,
+      nama: nama,
+      hp: hp,
+      email: email||null,
+      posisi: posisi,
+      jawaban: JSON.stringify(jawaban),
+      status: 'baru'
+    }).select('id');
+    if (res.error) throw res.error;
+    // Show success
+    g('main-view').style.display='none';
+    g('success-view').style.display='block';
+    g('kode-result').textContent = kode;
+    g('pesan-selesai').textContent = rek.pesanSelesai||'Terima kasih! Lamaran kamu sudah kami terima.';
+    // Notif WA ke admin
+    if (rek.notifWA) {
+      var waHp = rek.notifWA.replace(/[^0-9]/g,'');
+      if (waHp.startsWith('0')) waHp='62'+waHp.slice(1);
+      var msg = '🔔 Pelamar baru masuk!'+String.fromCharCode(10)+'Nama: '+nama+String.fromCharCode(10)+'Posisi: '+posisi+String.fromCharCode(10)+'HP: '+hp+String.fromCharCode(10)+'Kode: '+kode;
+      window.open('https://wa.me/'+waHp+'?text='+encodeURIComponent(msg),'_blank');
+    }
+  } catch(e) {
+    btn.disabled=false; btn.textContent='📝 Kirim Lamaran';
+    alert('Gagal: '+e.message);
+  }
+}
+
+async function cekStatus() {
+  var kode = g('inp-kode').value.trim().toUpperCase();
+  if (!kode) return;
+  var resEl = g('status-result');
+  resEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--txt2)">⏳ Mencari...</div>';
+  try {
+    var res = await _sb.from('applicants').select('nama,posisi,status,catatan_admin,created_at').eq('kode',kode).eq('restaurant_id',RESTAURANT_ID).single();
+    if (res.error || !res.data) { resEl.innerHTML='<div style="text-align:center;padding:12px;color:var(--red-dk)">Kode tidak ditemukan</div>'; return; }
+    var a = res.data;
+    var statusInfo = {baru:{label:'🆕 Menunggu Review',color:'var(--blue-dk)',bg:'var(--blue-bg)'},review:{label:'👀 Sedang Direview',color:'var(--amber-dk)',bg:'var(--amber-bg)'},interview:{label:'🗣️ Dipanggil Interview',color:'#5B21B6',bg:'#EDE9FE'},diterima:{label:'✅ Diterima!',color:'var(--green-dk)',bg:'var(--green-bg)'},ditolak:{label:'❌ Tidak Lolos',color:'var(--red-dk)',bg:'var(--red-bg)'}};
+    var si = statusInfo[a.status] || {label:a.status,color:'var(--txt2)',bg:'var(--bg2)'};
+    var tgl = a.created_at ? new Date(a.created_at).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-';
+    resEl.innerHTML = '<div style="background:'+si.bg+';border-radius:12px;padding:16px;text-align:center">'+
+      '<div style="font-size:18px;font-weight:800;color:'+si.color+'">'+si.label+'</div>'+
+      '<div style="font-size:13px;color:var(--txt2);margin-top:6px">'+a.nama+' · '+a.posisi+'</div>'+
+      '<div style="font-size:11px;color:var(--txt3);margin-top:4px">Dikirim '+tgl+'</div>'+
+      (a.catatan_admin?'<div style="margin-top:10px;font-size:12px;background:rgba(0,0,0,.06);border-radius:8px;padding:8px">📝 '+a.catatan_admin+'</div>':'')+
+    '</div>';
+  } catch(e) { resEl.innerHTML='<div style="color:var(--red-dk)">Error: '+e.message+'</div>'; }
+}
+
+function salinKode() {
+  var kode = g('kode-result').textContent;
+  navigator.clipboard.writeText(kode).catch(function(){});
+  g('success-view').querySelector('.cek-btn').textContent='✅ Disalin!';
+  setTimeout(function(){ g('success-view').querySelector('.cek-btn').textContent='📋 Salin Kode'; },2000);
+}
+
+function showErr(id,msg){ var el=g(id); if(el){el.textContent=msg;el.style.display='block';} }
+function hideErr(id){ var el=g(id); if(el) el.style.display='none'; }
+
+init();
+</script>
+</body>
+</html>
