@@ -254,7 +254,9 @@ async function submitLamaran() {
   var ok = true;
   if (!nama) { showErr('err-nama','Nama wajib diisi'); ok=false; } else hideErr('err-nama');
   if (!hp) { showErr('err-hp','No. HP wajib diisi'); ok=false; } else hideErr('err-hp');
-  if (!posisi) { showErr('err-posisi','Pilih posisi terlebih dahulu'); ok=false; } else hideErr('err-posisi');
+  var posisiSelect = g('inp-posisi');
+  var hasPosisiOptions = posisiSelect && posisiSelect.options.length > 1;
+  if (hasPosisiOptions && !posisi) { showErr('err-posisi','Pilih posisi terlebih dahulu'); ok=false; } else hideErr('err-posisi');
   // Validate required questions
   var rek = (_resto.rekrutmen_cfg)||{};
   var jawaban = {};
@@ -276,6 +278,12 @@ async function submitLamaran() {
   if (!ok) { return; }
 
   var btn = g('btn-submit'); btn.disabled=true; btn.textContent='⏳ Mengirim...';
+  // Check if Supabase is ready
+  if (!_sb || !RESTAURANT_ID) {
+    btn.disabled=false; btn.textContent='📝 Kirim Lamaran';
+    alert('Koneksi database belum siap. Refresh halaman dan coba lagi.');
+    return;
+  }
   try {
     var kode = 'REF-'+Math.random().toString(36).substr(2,5).toUpperCase();
     var res = await _sb.from('applicants').insert({
@@ -302,8 +310,13 @@ async function submitLamaran() {
       window.open('https://wa.me/'+waHp+'?text='+encodeURIComponent(msg),'_blank');
     }
   } catch(e) {
+    console.error('submitLamaran error:', e);
     btn.disabled=false; btn.textContent='📝 Kirim Lamaran';
-    alert('Gagal: '+e.message);
+    var errDiv = document.createElement('div');
+    errDiv.style.cssText = 'background:var(--red-bg);color:var(--red-dk);border-radius:8px;padding:10px 14px;font-size:13px;margin-top:10px;font-weight:600';
+    errDiv.textContent = '❌ Gagal mengirim lamaran: ' + (e.message||'Coba lagi');
+    btn.parentNode.insertBefore(errDiv, btn.nextSibling);
+    setTimeout(function(){ if(errDiv.parentNode) errDiv.parentNode.removeChild(errDiv); }, 6000);
   }
 }
 
