@@ -266,18 +266,36 @@ async function submitLamaran() {
     var qid = el.dataset.qid;
     var wajib = el.dataset.wajib==='1';
     var val = '';
-    if (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT') {
+    if (el.dataset.tipe === 'foto') {
+      val = el.dataset.value || '';
+    } else if (el.tagName==='INPUT' && el.type==='file') {
+      val = (el.files && el.files[0]) ? el.files[0].name : '';
+    } else if (el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT') {
       val = el.value.trim();
     } else {
-      // radio group
       var checked = el.querySelector('input[type="radio"]:checked');
       val = checked ? checked.value : '';
     }
     jawaban[qid] = val;
-    if (wajib && !val) ok = false;
+    if (wajib && !val) {
+      console.warn('Wajib field empty:', qid, el);
+      ok = false;
+    }
   });
   console.log('Validation ok=', ok, 'jawaban=', jawaban);
-  if (!ok) { alert('Validasi gagal - mohon lengkapi semua field wajib'); return; }
+  if (!ok) {
+    // Show visible error message to user
+    var existing = document.getElementById('form-global-err');
+    if (existing) existing.remove();
+    var errGlobal = document.createElement('div');
+    errGlobal.id = 'form-global-err';
+    errGlobal.style.cssText = 'background:var(--red-bg);color:var(--red-dk);border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;margin-bottom:12px;text-align:center';
+    errGlobal.textContent = '⚠️ Mohon lengkapi semua field yang wajib diisi (ditandai *).';
+    var card = document.querySelector('#panel-lamar .card');
+    if (card) card.insertBefore(errGlobal, card.firstChild);
+    errGlobal.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
 
   var btn = g('btn-submit'); btn.disabled=true; btn.textContent='⏳ Mengirim...';
   // Check if Supabase is ready
