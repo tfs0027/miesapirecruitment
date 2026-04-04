@@ -250,6 +250,7 @@ async function submitLamaran() {
   var hp = g('inp-hp').value.trim();
   var email = g('inp-email').value.trim();
   var posisi = g('inp-posisi').value;
+  console.log('submitLamaran called, _sb=', !!_sb, 'RESTAURANT_ID=', RESTAURANT_ID, '_resto=', !!_resto);
   // Validate
   var ok = true;
   if (!nama) { showErr('err-nama','Nama wajib diisi'); ok=false; } else hideErr('err-nama');
@@ -275,7 +276,8 @@ async function submitLamaran() {
     jawaban[qid] = val;
     if (wajib && !val) ok = false;
   });
-  if (!ok) { return; }
+  console.log('Validation ok=', ok, 'jawaban=', jawaban);
+  if (!ok) { alert('Validasi gagal - mohon lengkapi semua field wajib'); return; }
 
   var btn = g('btn-submit'); btn.disabled=true; btn.textContent='⏳ Mengirim...';
   // Check if Supabase is ready
