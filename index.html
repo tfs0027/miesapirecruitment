@@ -273,7 +273,7 @@ async function submitLamaran() {
     var qid = el.dataset.qid;
     var wajib = el.dataset.wajib==='1';
     var val = '';
-    if (el.dataset.tipe === 'foto') {
+    if (el.dataset.tipe === 'foto' || el.dataset.tipe === 'file') {
       val = el.dataset.value || '';
     } else if (el.tagName==='INPUT' && el.type==='file') {
       val = (el.files && el.files[0]) ? el.files[0].name : '';
@@ -287,6 +287,19 @@ async function submitLamaran() {
     if (wajib && !val) {
       console.warn('Wajib field empty:', qid, el);
       ok = false;
+      // Highlight the field visually
+      var uploadLbl = el.querySelector && el.querySelector('label');
+      if (uploadLbl) {
+        uploadLbl.style.borderColor = 'var(--red)';
+        uploadLbl.style.background = 'var(--red-bg)';
+        // Auto-reset on file select
+        var inp = uploadLbl.querySelector('input');
+        if (inp) inp.addEventListener('change', function(){
+          uploadLbl.style.borderColor=''; uploadLbl.style.background='';
+        }, {once:true});
+      } else if (el.style) {
+        el.style.borderColor = 'var(--red)';
+      }
     }
   });
   console.log('Validation ok=', ok, 'jawaban=', jawaban);
