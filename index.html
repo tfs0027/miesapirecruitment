@@ -44,6 +44,25 @@ select.fi{cursor:pointer}
 .tab-row{display:flex;gap:8px;margin-bottom:16px}
 .tab-btn{flex:1;padding:10px;border:2px solid var(--brd);border-radius:10px;background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--txt2)}
 .tab-btn.active{border-color:var(--accent);background:var(--accent);color:#fff}
+
+/* ── Recruit Page Responsive ── */
+@media (max-width:639px){
+  .container{padding:14px 12px 48px!important}
+  .header{padding:20px 0 14px!important}
+  .header-logo{font-size:40px!important}
+  .header-nama{font-size:18px!important}
+  .card{padding:16px!important}
+  .tab-btn{font-size:12px!important;padding:8px!important}
+  .btn-submit{padding:14px!important;font-size:15px!important}
+  .desc-box{font-size:12px!important}
+  .success-card{padding:24px 16px!important}
+}
+@media (min-width:640px){
+  .container{max-width:540px}
+}
+@media (min-width:1024px){
+  .container{max-width:600px}
+}
 </style>
 </head>
 <body>
