@@ -202,11 +202,18 @@ async function init() {
         dq.appendChild(div);
         return;
       } else if (q.tipe==='file') {
-        input = document.createElement('input');
-        input.className = 'fi';
-        input.type = 'file';
-        input.accept = '.pdf,.doc,.docx';
-        input.style.padding = '8px';
+        var fileWrap = document.createElement('div');
+        fileWrap.dataset.qid = q.id;
+        fileWrap.dataset.wajib = q.wajib ? '1' : '0';
+        fileWrap.dataset.tipe = 'file';
+        fileWrap.innerHTML = '<label style="display:block;cursor:pointer;background:var(--bg2);border:1.5px dashed var(--brd2);border-radius:var(--radius);padding:14px;text-align:center">' +
+          '<input type="file" accept=".pdf,.doc,.docx,image/*" style="display:none" onchange="readFileAsBase64(this)">' +
+          '<div style="font-size:22px;margin-bottom:4px">📎</div>' +
+          '<div id="file-label-'+q.id+'" style="font-size:12px;color:var(--txt2)">Tap untuk upload file (PDF/DOC)</div>' +
+        '</label>';
+        div.appendChild(fileWrap);
+        dq.appendChild(div);
+        return;
       } else if (q.tipe==='foto') {
         var wrap2 = document.createElement('div');
         wrap2.dataset.qid = q.id;
@@ -366,6 +373,24 @@ function salinKode() {
   navigator.clipboard.writeText(kode).catch(function(){});
   g('success-view').querySelector('.cek-btn').textContent='✅ Disalin!';
   setTimeout(function(){ g('success-view').querySelector('.cek-btn').textContent='📋 Salin Kode'; },2000);
+}
+
+function readFileAsBase64(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var wrap = input.closest('[data-tipe="file"]');
+    if (wrap) {
+      wrap.dataset.value = e.target.result;
+      var lbl = wrap.querySelector('[id^="file-label-"]');
+      if (lbl) lbl.innerHTML = '✅ <b>' + file.name + '</b> (' + Math.round(file.size/1024) + ' KB)';
+    }
+  };
+  if (file.size > 2 * 1024 * 1024) {
+    alert('File terlalu besar. Maksimal 2MB.'); input.value=''; return;
+  }
+  reader.readAsDataURL(file);
 }
 
 function previewFoto(input, previewId) {
