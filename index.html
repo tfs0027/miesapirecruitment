@@ -125,6 +125,7 @@ select.fi{cursor:pointer}
     <div class="kode-ref" id="kode-result"></div>
     <div style="font-size:11px;color:var(--txt2);margin-top:6px">Simpan kode ini untuk mengecek status lamaran.</div>
     <button class="cek-btn" style="margin-top:16px" onclick="salinKode()">📋 Salin Kode</button>
+    <button class="cek-btn" style="margin-top:8px;background:var(--accent);color:#fff;border:none" onclick="goToCekStatus()">🔍 Cek Status Lamaran</button>
   </div>
 </div>
 
@@ -149,7 +150,17 @@ async function init() {
     var rek = _resto.rekrutmen_cfg || {};
     // Setup header
     g('hdr-nama').textContent = _resto.nama || 'WarungKu';
-    g('hdr-logo').textContent = cfg.logo || '🍜';
+    // Show logo image or emoji
+    if (rek.logoImg) {
+      var logoEl = g('hdr-logo');
+      var img = document.createElement('img');
+      img.src = rek.logoImg;
+      img.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:14px;border:2px solid var(--brd)';
+      logoEl.innerHTML = '';
+      logoEl.appendChild(img);
+    } else {
+      g('hdr-logo').textContent = cfg.logo || '🍜';
+    }
     g('hdr-judul').textContent = rek.judulLowongan || 'Bergabung Bersama Kami';
     g('hdr-desc').textContent = rek.deskripsi || '';
     document.title = (rek.judulLowongan||'Lamaran') + ' - ' + (_resto.nama||'');
@@ -379,6 +390,16 @@ async function cekStatus() {
       (a.catatan_admin?'<div style="margin-top:10px;font-size:12px;background:rgba(0,0,0,.06);border-radius:8px;padding:8px">📝 '+a.catatan_admin+'</div>':'')+
     '</div>';
   } catch(e) { resEl.innerHTML='<div style="color:var(--red-dk)">Error: '+e.message+'</div>'; }
+}
+
+function goToCekStatus() {
+  var kode = g('kode-result').textContent;
+  // Go to cek tab and pre-fill kode
+  g('success-view').style.display = 'none';
+  g('main-view').style.display = 'block';
+  showTab('cek');
+  var inp = g('inp-kode'); if(inp) inp.value = kode;
+  cekStatus();
 }
 
 function salinKode() {
