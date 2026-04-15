@@ -2,6 +2,15 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+<script>
+// Redirect HTTP → HTTPS di production
+if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  location.replace('https:' + location.href.substring(5));
+}
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Formulir Lamaran</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -149,6 +158,12 @@ select.fi{cursor:pointer}
 </div>
 
 <script>
+// ── XSS sanitizer ─────────────────────────────────────────────────────────
+function escHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 var SB_URL = 'https://lztdvlrunspmcoewfjcg.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6dGR2bHJ1bnNwbWNvZXdmamNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODA5MDIsImV4cCI6MjA5MDI1NjkwMn0.fOxpyctLY6k-QjaMIdUdRHJnsGm7FhPozhWTMBSl9-4';
 var _sb = null, _resto = null, RESTAURANT_ID = null;
@@ -287,8 +302,7 @@ async function submitLamaran() {
   var hp = g('inp-hp').value.trim();
   var email = g('inp-email').value.trim();
   var posisi = g('inp-posisi').value;
-  console.log('submitLamaran called, _sb=', !!_sb, 'RESTAURANT_ID=', RESTAURANT_ID, '_resto=', !!_resto);
-  // Validate
+    // Validate
   var ok = true;
   if (!nama) { showErr('err-nama','Nama wajib diisi'); ok=false; } else hideErr('err-nama');
   if (!hp) { showErr('err-hp','No. HP wajib diisi'); ok=false; } else hideErr('err-hp');
@@ -332,8 +346,7 @@ async function submitLamaran() {
       }
     }
   });
-  console.log('Validation ok=', ok, 'jawaban=', jawaban);
-  if (!ok) {
+    if (!ok) {
     // Show visible error message to user
     var existing = document.getElementById('form-global-err');
     if (existing) existing.remove();
